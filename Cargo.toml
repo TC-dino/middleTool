@@ -1,0 +1,33 @@
+[package]
+name = "dbx"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# GUI
+iced = { version = "0.14", features = ["tokio"] }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# SQL databases - SQLite only for now
+sqlx = { version = "0.8", features = [
+    "runtime-tokio",
+    "sqlite",
+] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Utilities
+chrono = "0.4"
+uuid = { version = "1", features = ["v4"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+dirs = "6"
+rfd = "0.15"
+
+[features]
+default = ["sqlite"]
+sqlite = ["sqlx/sqlite"]
