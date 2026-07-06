@@ -1,6 +1,9 @@
 pub mod connection;
 pub mod sqlite;
 
+#[cfg(test)]
+mod tests;
+
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 

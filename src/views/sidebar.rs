@@ -3,6 +3,7 @@ use iced::{Element, Fill, Theme};
 
 use crate::config::AppConfig;
 use crate::db::ConnectionConfig;
+use crate::theme::DbxPalette;
 
 #[derive(Debug, Clone)]
 pub enum SidebarMessage {
@@ -32,6 +33,7 @@ impl Default for SidebarState {
 
 pub fn view_sidebar<'a>(
     config: &AppConfig,
+    palette: &'a DbxPalette,
     connected: bool,
     active_index: Option<usize>,
     state: &SidebarState,
@@ -97,6 +99,7 @@ pub fn view_sidebar<'a>(
         // Show tables under active connection
         if is_active && connected {
             let tree = crate::widgets::db_tree::DbTree::view(
+                palette,
                 &state.tables,
                 connected,
                 state.selected_table.as_deref(),

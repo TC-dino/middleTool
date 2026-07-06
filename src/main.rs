@@ -1,6 +1,8 @@
 mod app;
 mod config;
 mod db;
+mod editor;
+mod theme;
 mod views;
 mod widgets;
 

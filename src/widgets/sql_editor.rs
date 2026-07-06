@@ -1,5 +1,7 @@
 use iced::widget::{button, column, row, text, text_editor};
-use iced::{Element, Length};
+use iced::{Element, Font, Length};
+
+use crate::theme::DbxPalette;
 
 #[derive(Debug, Clone)]
 pub enum EditorMessage {
@@ -11,11 +13,12 @@ pub enum EditorMessage {
 pub struct SqlEditor;
 
 impl SqlEditor {
-    pub fn view<'a>(content: &'a text_editor::Content) -> Element<'a, EditorMessage> {
+    pub fn view<'a>(_palette: &DbxPalette, content: &'a text_editor::Content) -> Element<'a, EditorMessage> {
         let editor = text_editor(content)
             .on_action(EditorMessage::Edit)
             .height(Length::Fill)
-            .padding(8);
+            .padding(8)
+            .font(Font::MONOSPACE);
 
         let toolbar = row![
             button(

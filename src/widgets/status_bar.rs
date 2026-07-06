@@ -2,11 +2,13 @@ use iced::widget::{container, row, text};
 use iced::{Element, Fill, Theme};
 
 use crate::app::Message;
+use crate::theme::DbxPalette;
 
 pub struct StatusBar;
 
 impl StatusBar {
     pub fn view(
+        palette: &DbxPalette,
         connected: bool,
         connection_name: String,
         message: Option<String>,
@@ -14,9 +16,9 @@ impl StatusBar {
     ) -> Element<'static, Message> {
         let status_icon = if connected { "●" } else { "○" };
         let status_color = if connected {
-            iced::Color::from_rgb(0.2, 0.8, 0.2)
+            palette.success
         } else {
-            iced::Color::from_rgb(0.8, 0.2, 0.2)
+            palette.error
         };
 
         let status = row![

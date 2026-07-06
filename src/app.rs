@@ -5,6 +5,7 @@ use iced::{Element, Fill, Subscription, Task};
 use crate::config::AppConfig;
 use crate::db::connection::{self, DbConnection};
 use crate::db::QueryResult;
+use crate::theme::DbxPalette;
 use crate::views::connection_dialog::{ConnectionDialogState, DialogMessage};
 use crate::views::editor_panel::{EditorPanelMessage, EditorState};
 use crate::views::results_panel::{ResultsPanelMessage, ResultsState};
@@ -26,6 +27,7 @@ impl DbxApp {
 
 pub struct State {
     pub config: AppConfig,
+    pub palette: DbxPalette,
     pub active_connection: Option<DbConnection>,
     pub active_connection_index: Option<usize>,
     pub sidebar: SidebarState,
@@ -39,6 +41,7 @@ impl Default for State {
     fn default() -> Self {
         Self {
             config: AppConfig::load(),
+            palette: DbxPalette::default(),
             active_connection: None,
             active_connection_index: None,
             sidebar: SidebarState::default(),
@@ -99,7 +102,15 @@ impl DbxApp {
     pub fn subscription(&self) -> Subscription<Message> {
         keyboard::listen().filter_map(|event| {
             if let keyboard::Event::KeyPressed { key, modifiers, .. } = event {
-                Some(Message::KeyPressed(key, modifiers))
+                // Only capture Ctrl+Enter, let other shortcuts (Ctrl+Z/X/C/V) pass through to text_editor
+                use keyboard::key::{Key, Named};
+                if modifiers.command() {
+                    if let Key::Named(Named::Enter) = key {
+                        return Some(Message::KeyPressed(key, modifiers));
+                    }
+                }
+                // Don't capture other keyboard events - let them reach text_editor
+                None
             } else {
                 None
             }
@@ -160,7 +171,9 @@ impl State {
                     EditorPanelMessage::Editor(editor_msg) => {
                         match &editor_msg {
                             crate::widgets::sql_editor::EditorMessage::Execute => {
-                                if let Some(query) = self.editor.update(editor_msg) {
+                                self.editor.update(editor_msg);
+                                let query = self.editor.get_executable_query();
+                                if !query.is_empty() {
                                     return self.execute_query(&query);
                                 }
                             }
@@ -247,9 +260,8 @@ impl State {
                 // Ctrl+Enter -> Execute query
                 if modifiers.command() {
                     if let Key::Named(Named::Enter) = key {
-                        if let Some(query) = self.editor.update(
-                            crate::widgets::sql_editor::EditorMessage::Execute,
-                        ) {
+                        let query = self.editor.get_executable_query();
+                        if !query.is_empty() {
                             return self.execute_query(&query);
                         }
                     }
@@ -303,7 +315,7 @@ impl State {
 
         // Dialog overlay
         if self.dialog.visible {
-            let dialog = self.dialog.view().map(Message::Dialog);
+            let dialog = self.dialog.view(&self.palette).map(Message::Dialog);
             return container(dialog)
                 .center_x(Fill)
                 .center_y(Fill)
@@ -313,6 +325,7 @@ impl State {
         // Sidebar
         let sidebar_view = sidebar::view_sidebar(
             &self.config,
+            &self.palette,
             self.active_connection.is_some(),
             self.active_connection_index,
             &self.sidebar,
@@ -320,10 +333,10 @@ impl State {
         .map(Message::Sidebar);
 
         // Editor
-        let editor_view = self.editor.view().map(Message::Editor);
+        let editor_view = self.editor.view(&self.palette).map(Message::Editor);
 
         // Results
-        let results_view = self.results.view().map(Message::Results);
+        let results_view = self.results.view(&self.palette).map(Message::Results);
 
         // Right panel: editor + results split
         let right_panel = column![
@@ -333,7 +346,7 @@ impl State {
             container(text("").size(1))
                 .height(2)
                 .style(|_theme: &iced::Theme| container::Style {
-                    background: Some(iced::Color::from_rgb(0.3, 0.3, 0.35).into()),
+                    background: Some(self.palette.border.into()),
                     ..Default::default()
                 }),
             container(
@@ -361,7 +374,7 @@ impl State {
                 text(err.as_str())
                     .size(12)
                     .style(|_theme: &iced::Theme| text::Style {
-                        color: Some(iced::Color::from_rgb(1.0, 0.3, 0.3)),
+                        color: Some(self.palette.error),
                     }),
             )
             .padding([2, 8])
@@ -372,6 +385,7 @@ impl State {
 
         // Status bar
         let status = crate::widgets::status_bar::StatusBar::view(
+            &self.palette,
             self.active_connection.is_some(),
             connection_name.clone(),
             self.results.result.as_ref().and_then(|r| r.message.clone()),

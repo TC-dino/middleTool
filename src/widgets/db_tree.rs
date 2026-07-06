@@ -1,6 +1,8 @@
 use iced::widget::{button, column, container, scrollable, text};
 use iced::{Element, Fill, Theme};
 
+use crate::theme::DbxPalette;
+
 #[derive(Debug, Clone)]
 pub enum TreeMessage {
     TableClicked(String),
@@ -11,6 +13,7 @@ pub struct DbTree;
 
 impl DbTree {
     pub fn view<'a>(
+        palette: &'a DbxPalette,
         tables: &[String],
         connected: bool,
         selected_table: Option<&str>,
@@ -58,7 +61,7 @@ impl DbTree {
                     text(format!("  {}", table))
                         .size(13)
                         .style(|_theme: &Theme| text::Style {
-                            color: Some(iced::Color::from_rgb(0.2, 0.6, 1.0)),
+                            color: Some(palette.accent),
                         })
                 } else {
                     text(format!("  {}", table)).size(13)

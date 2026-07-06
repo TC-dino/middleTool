@@ -2,6 +2,7 @@ use iced::widget::{button, column, container, row, text, text_input, pick_list};
 use iced::{Element, Fill};
 
 use crate::db::ConnectionConfig;
+use crate::theme::DbxPalette;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DbType {
@@ -162,7 +163,7 @@ impl ConnectionDialogState {
         None
     }
 
-    pub fn view(&self) -> Element<'_, DialogMessage> {
+    pub fn view(&self, _palette: &DbxPalette) -> Element<'_, DialogMessage> {
         if !self.visible {
             return text("").into();
         }
